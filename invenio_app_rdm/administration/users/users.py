@@ -95,6 +95,11 @@ class UsersListView(AdminResourceListView):
             "payload_schema": None,
             "order": 2,
         },
+        "export": {
+            "text": _("Export"),
+            "payload_schema": None,
+            "order": 3,
+        },
     }
 
     def init_search_config(self):

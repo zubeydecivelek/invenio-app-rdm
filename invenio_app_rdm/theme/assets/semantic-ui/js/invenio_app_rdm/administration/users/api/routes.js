@@ -32,6 +32,10 @@ const APIRoutesGenerators = {
   impersonate: (user, idKeyPath = "id") => {
     return `/api/users/${_get(user, idKeyPath)}/impersonate`;
   },
+
+  export: (user, idKeyPath = "id") => {
+    return `/export/${_get(user, idKeyPath)}`;
+  },
 };
 export const APIRoutes = {
   ...APIRoutesGenerators,

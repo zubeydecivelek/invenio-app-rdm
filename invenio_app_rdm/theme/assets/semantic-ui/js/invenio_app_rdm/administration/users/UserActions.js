@@ -17,6 +17,7 @@ import { i18next } from "@translations/invenio_app_rdm/i18next";
 import { ImpersonateUser } from "../components/ImpersonateUser";
 import { SetQuotaAction } from "../components/SetQuotaAction";
 import { UserModerationApi } from "./api";
+import { APIRoutes } from "./api/routes";
 
 export class UserActions extends Component {
   constructor(props) {
@@ -31,10 +32,32 @@ export class UserActions extends Component {
   static contextType = NotificationContext;
 
   handleAction = async (action) => {
-    this.setState({ loading: true });
     const { user, successCallback } = this.props;
     const { addNotification } = this.context;
     const name = user.profile?.full_name || user.email || user.username || user.id;
+
+    // Handle export action as download
+    if (action === "export") {
+      const exportUrl = APIRoutes.export(user);
+      // Trigger download by creating a temporary link
+      const link = document.createElement("a");
+      link.href = exportUrl;
+      link.download = `user_${user.id}.zip`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      addNotification({
+        title: i18next.t("Export started"),
+        content: i18next.t("User {{name}} export download started.", {
+          name: name,
+        }),
+        type: "success",
+      });
+      return;
+    }
+
+    this.setState({ loading: true });
 
     const actionConfig = {
       restore: {
@@ -122,6 +145,7 @@ export class UserActions extends Component {
       { key: "restore", label: "Restore", icon: "undo" },
       { key: "deactivate", label: "Deactivate", icon: "pause" },
       { key: "block", label: "Block", icon: "ban" },
+      { key: "export", label: "Export", icon: "download" },
     ];
 
     const filteredActions = actionItems.filter((actionItem) => {
@@ -131,7 +155,8 @@ export class UserActions extends Component {
         (actionItem.key === "deactivate" && (isUserActive || displaySuspend)) ||
         (actionItem.key === "activate" && (!isUserActive || !isUserConfirmed)) ||
         (actionItem.key === "approve" &&
-          (displayApprove || (isUserActive && !isUserVerified)))
+          (displayApprove || (isUserActive && !isUserVerified))) ||
+        (actionItem.key === "export")
       );
     });
 
