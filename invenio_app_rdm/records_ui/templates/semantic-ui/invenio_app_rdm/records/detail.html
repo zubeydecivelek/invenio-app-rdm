@@ -22,6 +22,7 @@
 {% endif %}
 
 {%- from "invenio_app_rdm/records/macros/files.html" import file_list_box, preview_file_box, media_file_list_box with context %}
+{% from "invenio_app_rdm/records/macros/file_display_name.html" import get_display_name %}
 
 {%- set title = record_ui["metadata"]["title"] %}
 {%- set metadata = record_ui["metadata"] %}
@@ -293,9 +294,26 @@
                       <h2 id="files-heading">{{ _('Files') }}</h2>
                       {%- if files|has_previewable_files -%}
                         {%-set preview_file = files|select_preview_file(default_preview=record_ui["files"]["default_preview"]) %}
-                        {{ preview_file_box(preview_file, record_ui["id"], is_preview, record, include_deleted) }}
+                        {% call(file) preview_file_box(
+                          preview_file,
+                          record_ui["id"],
+                          is_preview,
+                          record,
+                          include_deleted
+                      ) %}
+                        {{ get_display_name(file) }}
+                      {% endcall %}
                       {%- endif -%}
-                      {{ file_list_box(files, record_ui["id"], is_preview, include_deleted, record, permissions) }}
+                      {% call(file) file_list_box(
+                        files,
+                        record_ui["id"],
+                        is_preview,
+                        include_deleted,
+                        record,
+                        permissions
+                    ) %}
+                      {{ get_display_name(file) }}
+                    {% endcall %}
                     {% endif %}
                   {% else %}
                     {# record has files BUT user does not have permission to see files #}

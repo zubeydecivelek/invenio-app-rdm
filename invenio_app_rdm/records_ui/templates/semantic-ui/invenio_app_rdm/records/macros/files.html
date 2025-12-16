@@ -44,7 +44,13 @@
         class="trigger"
         aria-label="{{ _('File preview') }}"
       >
-        <span id="preview-file-title">{{ file.key }}</span>
+        <span id="preview-file-title">
+            {% if caller is defined %}
+              {{ caller(file) }}
+            {% else %}
+              {{ file.key }}
+          {% endif %}
+        </span>
         <i class="angle right icon" aria-hidden="true"></i>
       </div>
     </h3>
@@ -120,7 +126,13 @@ To access its content, please download it and open it locally.') }}
         <tr>
           <td class="ten wide">
             <div>
-              <a href="{{ file_url_download }}">{{ file.key }}</a>
+              <a href="{{ file_url_download }}">
+                {% if caller is defined %}
+                  {{ caller(file) }}
+                {% else %}
+                  {{ file.key }}
+                {% endif %}
+              </a>
             </div>
             {%- if not is_remote_file %}
             <small class="ui text-muted font-tiny">{{ file.checksum or _("Checksum not yet calculated.") }}
@@ -153,6 +165,7 @@ To access its content, please download it and open it locally.') }}
 
 {% macro file_list_box(files, pid, is_preview, include_deleted, record, permissions) %}
   {%- set binary_sizes = not config.APP_RDM_DISPLAY_DECIMAL_FILE_SIZES %}
+  {% set outer_caller = caller if caller is defined else None %}
   <div class="ui accordion panel mb-10 {{ record.ui.access_status.id }}" href="#files-list-accordion-panel">
     <h3 class="active title panel-heading {{ record.ui.access_status.id }} m-0">
       <div role="button" id="files-list-accordion-trigger" aria-controls="files-list-accordion-panel" aria-expanded="true" tabindex="0" class="trigger">
@@ -174,7 +187,29 @@ To access its content, please download it and open it locally.') }}
         </div>
       {% endif %}
       <div>
-        {{ file_list(files, pid, is_preview, include_deleted, record=record,download_endpoint="invenio_app_rdm_records.record_file_download", permissions=permissions) }}
+        {% if outer_caller %}
+        {% call(file) file_list(
+            files,
+            pid,
+            is_preview,
+            include_deleted,
+            record=record,
+            download_endpoint="invenio_app_rdm_records.record_file_download",
+            permissions=permissions
+        ) %}
+          {{ outer_caller(file) }}
+        {% endcall %}
+      {% else %}
+        {{ file_list(
+            files,
+            pid,
+            is_preview,
+            include_deleted,
+            record=record,
+            download_endpoint="invenio_app_rdm_records.record_file_download",
+            permissions=permissions
+        ) }}
+      {% endif %}
       </div>
     </div>
   </div>
